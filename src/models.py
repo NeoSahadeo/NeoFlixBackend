@@ -1,6 +1,7 @@
-from peewee import SqliteDatabase, CharField, BooleanField, ForeignKeyField, TextField, Model
+from src.database import DatabaseSingleton
+from peewee import CharField, BooleanField, ForeignKeyField, TextField, Model
 
-db = SqliteDatabase('database.db')
+db = DatabaseSingleton()
 
 
 class BaseModel(Model):
@@ -21,6 +22,16 @@ class UserAccount(BaseModel):
             hashed_password=hashed_password,
             disabled=disabled
         )
+
+    def delete_user(self, email):
+        self.delete()
+
+    def update_user(self, username, email, hashed_password, disabled):
+        self.username = username
+        self.email = email
+        self.hashed_password = hashed_password
+        self.disabled = disabled
+        self.save()
 
 
 class Profile(BaseModel):

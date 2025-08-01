@@ -1,10 +1,8 @@
-from pathlib import Path
-from utils import read_config
-from models import create_tables
+import src.models
 
 
 def main():
-    create_tables()
+    src.models.create_tables()
     # config = read_config()
     # if not config:
     #     return
