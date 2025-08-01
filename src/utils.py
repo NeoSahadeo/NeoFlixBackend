@@ -1,5 +1,7 @@
 import sys
 import yaml
+from src.models import create_tables, UserAccount
+from src.security import hash_password
 
 
 def read_config() -> dict | None:
@@ -18,3 +20,8 @@ def read_config() -> dict | None:
     except yaml.YAMLError as e:
         print(f"Error parsing YAML: {e}")
     return None
+
+
+def create_user():
+    create_tables()
+    UserAccount().create_user("admin", "admin@gmail.com", hash_password("Password1234"))

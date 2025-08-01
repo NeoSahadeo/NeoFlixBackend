@@ -3,15 +3,24 @@
 The backend account handler for [NeoFlixWeb](https://github.com/NeoSahadeo/NeoFlixWeb)
 and `NeoFlixMobile`
 
+# Getting Started
+
+__Start Backend__
+
 ```bash
 fastapi dev src/main.py
 ```
 
-# Getting Started
+__Generate New Secret Key__
+
+```bash
+openssl rand -hex 32
+```
+
 
 # Project Roadmap
 
-- [ ] Create database models
+- [x] Create database models
 - [ ] Create database functions for api
 - [ ] Build database encryption
 - [ ] Link api calls to database functions

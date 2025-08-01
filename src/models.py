@@ -1,5 +1,6 @@
+from peewee import CharField, BooleanField, ForeignKeyField, Model
+from playhouse.sqlite_ext import JSONField
 from src.database import DatabaseSingleton
-from peewee import CharField, BooleanField, ForeignKeyField, TextField, Model
 
 db = DatabaseSingleton()
 
@@ -10,7 +11,7 @@ class BaseModel(Model):
 
 
 class UserAccount(BaseModel):
-    username = CharField(null=False)
+    username = CharField(unique=True, null=False)
     email = CharField(unique=True, null=False)
     disabled = BooleanField(default=False, null=False)
     hashed_password = CharField(null=False)
@@ -42,22 +43,22 @@ class Profile(BaseModel):
 
 class Preferences(BaseModel):
     profile = ForeignKeyField(Profile, backref='preferences')
-    preferences = TextField()
+    preferences = JSONField()
 
 
 class Watchlist(BaseModel):
     profile = ForeignKeyField(Profile, backref='watchlists')
-    watchlist = TextField()
+    preferences = JSONField()
 
 
 class Watchhistory(BaseModel):
     profile = ForeignKeyField(Profile, backref='watchhistories')
-    watchhistory = TextField()
+    preferences = JSONField()
 
 
 class Notification(BaseModel):
     profile = ForeignKeyField(Profile, backref='notifications')
-    notifications = TextField()
+    preferences = JSONField()
 
 
 def create_tables():

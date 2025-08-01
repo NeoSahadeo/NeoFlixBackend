@@ -2,3 +2,6 @@
 __pycache__
 .~lock.ApiRouteMap.ods#
 .pytest_cache
+database.db
+database.db-shm
+database.db-wal
