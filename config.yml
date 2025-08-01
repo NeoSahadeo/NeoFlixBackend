@@ -1,0 +1,2 @@
+database_name: "db.sqlite3"
+database_location: "."

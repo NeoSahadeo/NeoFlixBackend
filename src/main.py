@@ -1,24 +1,15 @@
-from typing import Annotated
-
-from fastapi import Depends, FastAPI
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-
-app = FastAPI()
+from pathlib import Path
+from utils import read_config
+from models import create_tables
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+def main():
+    create_tables()
+    # config = read_config()
+    # if not config:
+    #     return
+    # file_path = Path(config.get("database_location"))
 
 
-@app.post("/login")
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    ...
-
-
-@app.post("/logout")
-async def logout(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    ...
-
-
-@app.get("/logoutall")
-async def logoutall(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    ...
+if __name__ == "__main__":
+    main()
