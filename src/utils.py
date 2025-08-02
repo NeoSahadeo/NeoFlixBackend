@@ -1,7 +1,12 @@
 import sys
 import yaml
+
+from peewee_migrate import Router
+from peewee import SqliteDatabase
+
 from src.models import create_tables, UserAccount
 from src.security import hash_password
+from src.database import DatabaseSingleton
 
 
 def read_config() -> dict | None:
@@ -25,3 +30,20 @@ def read_config() -> dict | None:
 def create_user():
     create_tables()
     UserAccount().create_user("admin", "admin@gmail.com", hash_password("Password1234"))
+
+
+def migrate():
+    router = Router(DatabaseSingleton())
+
+    # Create migration
+    router.create('_')
+
+    # Run migration/migrations
+    router.run('_')
+
+    # Run all unapplied migrations
+    router.run()
+
+
+# if __name__ == "__main__":
+#     migrate()
