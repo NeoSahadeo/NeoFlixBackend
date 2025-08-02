@@ -29,4 +29,14 @@ def db():
         email="test_dummy@gmooch.com",
         hashed_password=hash_password("Password@1234")
     )
-    return _db
+
+    yield _db
+    _db.drop_tables([
+        UserAccount,
+        Profile,
+        Preferences,
+        Watchlist,
+        Watchhistory,
+        Notification
+    ])
+    _db.close()

@@ -28,3 +28,12 @@ def test_user_update(db):
     user: UserAccount = UserAccount.get(UserAccount.username == "Dummy1")
     user.update_user("Dummy3", "1234@gmail.com", "password312", False)
     assert UserAccount.get(UserAccount.email == "1234@gmail.com" and UserAccount.username == "Dummy3")
+
+
+def test_tokens(db):
+    user: UserAccount = UserAccount.get(UserAccount.username == "Dummy1")
+    user.register_token("cool_tokens")
+    assert user.check_token("cool_tokens")
+
+    user.revoke_token("cool_tokens")
+    assert not user.check_token("cool_tokens")

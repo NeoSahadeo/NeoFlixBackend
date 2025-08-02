@@ -1,6 +1,12 @@
+import datetime
 from peewee import CharField, BooleanField, ForeignKeyField, Model
 from playhouse.sqlite_ext import JSONField
+
+from argon2.exceptions import VerifyMismatchError
+
+from src.security import hash_password, verify_password
 from src.database import DatabaseSingleton
+from src.serializers import serialize_datetime
 
 db = DatabaseSingleton()
 
@@ -15,6 +21,10 @@ class UserAccount(BaseModel):
     email = CharField(unique=True, null=False)
     disabled = BooleanField(default=False, null=False)
     hashed_password = CharField(null=False)
+
+    tokens = JSONField(null=False, default={
+        "tokens": []
+    })
 
     def create_user(self, username, email, hashed_password, disabled=False):
         UserAccount.create(
@@ -33,6 +43,32 @@ class UserAccount(BaseModel):
         self.hashed_password = hashed_password
         self.disabled = disabled
         self.save()
+
+    def register_token(self, token: str):
+        self.tokens.get("tokens").append([
+            hash_password(token),
+            serialize_datetime(datetime.datetime.now())
+        ])
+        self.save()
+
+    def check_token(self, token: str) -> bool:
+        for t, d in self.tokens.get("tokens"):
+            try:
+                if verify_password(t, token):
+                    return True
+            except VerifyMismatchError:
+                pass
+        return False
+
+    def revoke_token(self, token: str):
+        for i, [t, d] in enumerate(self.tokens.get("tokens")):
+            try:
+                if verify_password(t, token):
+                    self.tokens.get("tokens").pop(i)
+                    self.save()
+                    return
+            except VerifyMismatchError:
+                pass
 
 
 class Profile(BaseModel):
