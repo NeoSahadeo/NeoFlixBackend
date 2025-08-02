@@ -76,9 +76,29 @@ class UserAccount(BaseModel):
 
 
 class Profile(BaseModel):
-    parent = ForeignKeyField(UserAccount, backref="profiles")
+    parent = ForeignKeyField(UserAccount, backref="profiles", null=False)
     name = CharField()
     avatar_url = CharField(null=True)
+
+    @classmethod
+    def create(cls, **query):
+        inst = super().create(**query)
+
+        Preferences.create(profile=inst, preferences={})
+        Watchlist.create(profile=inst, watchlist={})
+        Watchhistory.create(profile=inst, watchhistory={})
+        Notification.create(profile=inst, notifications={})
+        return inst
+
+    class Meta:
+        indexes = (
+            (('parent', 'name'), True),
+        )
+
+    def update_profile(self, name, avatar_url):
+        self.name = name or self.name
+        self.avatar_url = avatar_url or self.avatar_url
+        self.save()
 
 
 class Preferences(BaseModel):
@@ -88,17 +108,17 @@ class Preferences(BaseModel):
 
 class Watchlist(BaseModel):
     profile = ForeignKeyField(Profile, backref='watchlists')
-    preferences = JSONField()
+    watchlist = JSONField()
 
 
 class Watchhistory(BaseModel):
     profile = ForeignKeyField(Profile, backref='watchhistories')
-    preferences = JSONField()
+    watchhistory = JSONField()
 
 
 class Notification(BaseModel):
     profile = ForeignKeyField(Profile, backref='notifications')
-    preferences = JSONField()
+    notifications = JSONField()
 
 
 def create_tables():

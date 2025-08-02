@@ -12,12 +12,11 @@ from jwt.exceptions import InvalidTokenError
 
 from argon2.exceptions import VerifyMismatchError
 
-from peewee import DoesNotExist
-from playhouse.sqlite_ext import SqliteExtDatabase
+from peewee import DoesNotExist, IntegrityError
 
 from src.security import verify_password
-from src.models import UserAccount
-from src.database import DatabaseSingleton
+from src.models import UserAccount, Profile
+from src.forms import CreateProfileForm, DeleteProfileForm, UpdateProfileForm
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 0
 SECRET_KEY = "8dacf1b7f32fac1a731b3b6013f0621387e0b60e96e9cc4f1be27a51935ac0f3"
@@ -118,3 +117,41 @@ async def logout(token: Annotated[str, Depends(oauth2_scheme)], user: Annotated[
 async def logoutall(token: Annotated[str, Depends(oauth2_scheme)], user: Annotated[UserAccount, Depends(require_token)]):
     user.revoke_all_tokens()
     return {"message": "Logouts Successfull"}
+
+
+@router.post("/manageprofiles")
+async def create_profile(token: Annotated[str, Depends(oauth2_scheme)],
+                         user: Annotated[UserAccount, Depends(require_token)],
+                         form_data: Annotated[CreateProfileForm, Depends()]):
+    try:
+        profile: Profile = Profile.create(parent=user, name=form_data.name, avatar_url=form_data.avatar_url)
+        return {"message": "Profile created successfully", "data": profile}
+    except IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Profile with name already exists")
+
+
+@router.delete("/manageprofiles")
+async def delete_profile(token: Annotated[str, Depends(oauth2_scheme)],
+                         user: Annotated[UserAccount, Depends(require_token)],
+                         form_data: Annotated[DeleteProfileForm, Depends()]):
+    try:
+        profile: Profile = Profile.get(Profile.parent == user, Profile.id == form_data.id)
+        profile.delete_instance(recursive=True)
+        return {"message": "Profile deleted successfully", "data": profile}
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+
+
+@router.put("/manageprofiles")
+async def update_profile(token: Annotated[str, Depends(oauth2_scheme)],
+                         user: Annotated[UserAccount, Depends(require_token)],
+                         form_data: Annotated[UpdateProfileForm, Depends()]):
+    try:
+        profile: Profile = Profile.get(Profile.parent == user, Profile.id == form_data.id)
+        try:
+            profile.update_profile(form_data.name, form_data.avatar_url)
+            return {"message": "Profile updated successfully", "data": profile}
+        except IntegrityError:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Profile with name already exists")
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")

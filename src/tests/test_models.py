@@ -1,3 +1,5 @@
+import pytest
+from peewee import DoesNotExist
 from src.security import hash_password
 from src.models import (
     UserAccount,
@@ -37,3 +39,17 @@ def test_tokens(db):
 
     user.revoke_token("cool_tokens")
     assert not user.check_token("cool_tokens")
+
+
+def test_profiles(db):
+    user: UserAccount = UserAccount.get(UserAccount.username == "Dummy1")
+    Profile.create(parent=user, name="Test1")
+    assert Profile.get(Profile.name == "Test1")
+
+    profile: Profile = Profile.get(Profile.parent == user, Profile.name == "Test1")
+    profile.update_profile("Test2", "")
+    assert Profile.get(Profile.name == "Test2")
+
+    profile.delete_instance()
+    with pytest.raises(DoesNotExist):
+        Profile.get(Profile.name == "Test2")
