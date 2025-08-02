@@ -115,5 +115,6 @@ async def logout(token: Annotated[str, Depends(oauth2_scheme)], user: Annotated[
 
 
 @router.get("/logoutall")
-async def logoutall(form_data: Annotated[OAuth2PasswordRequestForm, Depends(require_token)]):
-    ...
+async def logoutall(token: Annotated[str, Depends(oauth2_scheme)], user: Annotated[UserAccount, Depends(require_token)]):
+    user.revoke_all_tokens()
+    return {"message": "Logouts Successfull"}

@@ -22,10 +22,11 @@ openssl rand -hex 32
 
 - [x] Create database models
 - [ ] Create database functions for api
-- [ ] Build database encryption
+- [-] Build database encryption
 - [ ] Link api calls to database functions
-- [ ] Setup authentication
-- [ ] Setup 2fa and secure endpoints
+- [x] Setup authentication
+- [ ] <strike>Setup 2fa and secure endpoints</strike>
+- [ ] Setup tmdb access grants
 
 ---
 

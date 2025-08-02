@@ -70,6 +70,10 @@ class UserAccount(BaseModel):
             except VerifyMismatchError:
                 pass
 
+    def revoke_all_tokens(self):
+        self.tokens = {"tokens": []}
+        self.save()
+
 
 class Profile(BaseModel):
     parent = ForeignKeyField(UserAccount, backref="profiles")
