@@ -28,6 +28,10 @@ openssl rand -hex 32
 - [ ] <strike>Setup 2fa and secure endpoints</strike>
 - [ ] Setup tmdb access grants
 
+# Possible Changes
+
+- [ ] Switch Peewee models to inherit from Pydantic
+
 ---
 
 # Authors
