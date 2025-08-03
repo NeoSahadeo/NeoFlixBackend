@@ -3,6 +3,14 @@
 The backend account handler for [NeoFlixWeb](https://github.com/NeoSahadeo/NeoFlixWeb)
 and `NeoFlixMobile`
 
+#### TechStek
+
+- FastApi
+- Peewee
+- Argon2-Cffi
+- PyJWT
+- Pydantic
+
 # Getting Started
 
 ### Get TMDB Api Key
