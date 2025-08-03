@@ -136,7 +136,7 @@ class Watchhistory(BaseModel):
     profile = ForeignKeyField(Profile, backref='watchhistories')
     watchhistory = JSONField(default={"watchhistory": []}, null=False)
 
-    def add(self, tmdb_id, current_time):
+    def add(self, tmdb_id, current_time=0):
         if self.watchhistory.get("watchhistory"):
             self.watchhistory.get("watchhistory").append({
                 "id": tmdb_id,
@@ -155,6 +155,10 @@ class Watchhistory(BaseModel):
             filtered_watchhistory = [entry for entry in watchhistory if entry["id"] != tmdb_id]
             self.watchhistory = {"watchhistory": filtered_watchhistory}
             self.save()
+
+    def clear(self):
+        self.watchhistory = {"watchhistory": []}
+        self.save()
 
 
 class Notification(BaseModel):

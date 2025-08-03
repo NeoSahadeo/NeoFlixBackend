@@ -18,4 +18,10 @@ class UpdateProfileForm(BaseModel):
 
 
 class UpdateWatchlistForm(BaseModel):
+    profile_id: int
     tmdb_id: int
+
+
+class UpdateWatchHistoryForm(BaseModel):
+    tmdb_id: int
+    current_time: int

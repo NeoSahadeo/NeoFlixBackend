@@ -17,8 +17,8 @@ from argon2.exceptions import VerifyMismatchError
 from peewee import DoesNotExist, IntegrityError
 
 from src.security import verify_password
-from src.models import UserAccount, Profile, Token, TokenData, Watchlist
-from src.forms import CreateProfileForm, DeleteProfileForm, UpdateProfileForm, UpdateWatchlistForm
+from src.models import UserAccount, Profile, Token, TokenData, Watchlist, Watchhistory
+from src.forms import CreateProfileForm, DeleteProfileForm, UpdateProfileForm, UpdateWatchlistForm, UpdateWatchHistoryForm
 
 load_dotenv()
 
@@ -89,6 +89,14 @@ async def require_token(current_user: Annotated[UserAccount, Depends(get_current
     return current_user
 
 
+def local_get_profile(id, user: UserAccount):
+    try:
+        profile: Profile = Profile.get(Profile.parent == user, Profile.id == id)
+        return profile
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+
+
 @access_router.post("/token")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     user = authenticate_user(form_data.username, form_data.password)
@@ -125,9 +133,9 @@ async def logoutall(user: Annotated[UserAccount, Depends(require_token)]):
 
 
 @manageprofiles_router.get("/{id}")
-async def get_profile(user: Annotated[UserAccount, Depends(require_token)], id: int):
+async def get_profile(id: int, user: Annotated[UserAccount, Depends(require_token)]):
     try:
-        profile: Profile = Profile.get((Profile.id == id) & (Profile.parent_id == user.id))
+        profile: Profile = local_get_profile(id, user)
         return {"data": profile.__data__}
     except DoesNotExist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Id does not match known profiles")
@@ -157,78 +165,89 @@ async def create_profile(token: Annotated[str, Depends(oauth2_scheme)],
 async def delete_profile(token: Annotated[str, Depends(oauth2_scheme)],
                          user: Annotated[UserAccount, Depends(require_token)],
                          form_data: Annotated[DeleteProfileForm, Depends()]):
-    try:
-        profile: Profile = Profile.get(Profile.parent == user, Profile.id == form_data.id)
-        profile.delete_instance(recursive=True)
-        return {"message": "Profile deleted successfully", "data": profile.__data__}
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+    profile: Profile = local_get_profile(form_data.id, user)
+    profile.delete_instance(recursive=True)
+    return {"message": "Profile deleted successfully", "data": profile.__data__}
 
 
 @manageprofiles_router.put("")
 async def update_profile(token: Annotated[str, Depends(oauth2_scheme)],
                          user: Annotated[UserAccount, Depends(require_token)],
                          form_data: Annotated[UpdateProfileForm, Depends()]):
+    profile: Profile = local_get_profile(form_data.id, user)
     try:
-        profile: Profile = Profile.get(Profile.parent == user, Profile.id == form_data.id)
-        try:
-            profile.update_profile(form_data.name, form_data.avatar_url)
-            return {"message": "Profile updated successfully", "data": profile.__data__}
-        except IntegrityError:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Profile with name already exists")
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+        profile.update_profile(form_data.name, form_data.avatar_url)
+        return {"message": "Profile updated successfully", "data": profile.__data__}
+    except IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Profile with name already exists")
 
 
 @watchlist_router.get("/{profile_id}")
 async def get_watchlist(profile_id: int, user: Annotated[UserAccount, Depends(require_token)]):
-    try:
-        profile: Profile = Profile.get(Profile.parent == user, Profile.id == profile_id)
-        watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
-        return {"data": watchlist.__data__.get("watchlist")}
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+    profile: Profile = local_get_profile(profile_id, user)
+    watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
+    return {"data": watchlist.__data__.get("watchlist")}
 
 
-# @watchlist_router.post("")
-#     ...
-
-# @watchlist_router.delete(""):
-#     ...
-#
-#
 @watchlist_router.put("/add")
 async def add_watchlist(profile_id: int,
                         user: Annotated[UserAccount, Depends(require_token)],
                         form_data: Annotated[UpdateWatchlistForm, Depends()]):
-    try:
-        profile: Profile = Profile.get(Profile.parent == user, Profile.id == profile_id)
-        watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
-        watchlist.add(form_data.tmdb_id)
-        return {"data": watchlist.__data__.get("watchlist")}
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+    profile: Profile = local_get_profile(profile_id, user)
+    watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
+    watchlist.add(form_data.tmdb_id)
+    return {"data": watchlist.__data__.get("watchlist")}
 
 
 @watchlist_router.put("/remove")
 async def remove_watchlist(profile_id: int,
                            user: Annotated[UserAccount, Depends(require_token)],
                            form_data: Annotated[UpdateWatchlistForm, Depends()]):
-    try:
-        profile: Profile = Profile.get(Profile.parent == user, Profile.id == profile_id)
-        watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
-        watchlist.remove(form_data.tmdb_id)
-        return {"data": watchlist.__data__.get("watchlist")}
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+    profile: Profile = local_get_profile(profile_id, user)
+    watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
+    watchlist.remove(form_data.tmdb_id)
+    return {"data": watchlist.__data__.get("watchlist")}
 
 
 @watchlist_router.put("/clear")
 async def clear_watchlist(profile_id: int, user: Annotated[UserAccount, Depends(require_token)]):
-    try:
-        profile: Profile = Profile.get(Profile.parent == user, Profile.id == profile_id)
-        watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
-        watchlist.clear()
-        return {"data": watchlist.__data__.get("watchlist")}
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not profile found")
+    profile: Profile = local_get_profile(profile_id, user)
+    watchlist: Watchlist = Watchlist.get(Watchlist.profile == profile)
+    watchlist.clear()
+    return {"data": watchlist.__data__.get("watchlist")}
+
+
+@watchhistory_router.get("/{profile_id}")
+async def get_watchhistory(profile_id: int,
+                           user: Annotated[UserAccount, Depends(require_token)]):
+    profile: Profile = local_get_profile(profile_id, user)
+    watchhistory: Watchhistory = Watchhistory.get(Watchhistory.profile == profile)
+    return {"data": watchhistory.__data__.get("watchhistory")}
+
+
+@watchhistory_router.put("/add")
+async def add_watchhistory(profile_id: int,
+                           user: Annotated[UserAccount, Depends(require_token)],
+                           form_data: Annotated[UpdateWatchHistoryForm, Depends()]):
+    profile: Profile = local_get_profile(profile_id, user)
+    watchhistory: Watchhistory = Watchhistory.get(Watchhistory.profile == profile)
+    watchhistory.add(form_data.tmdb_id, form_data.current_time)
+    return {"data": watchhistory.__data__.get("watchhistory")}
+
+
+@watchhistory_router.put("/remove")
+async def remove_watchhistory(profile_id: int,
+                              tmdb_id: int,
+                              user: Annotated[UserAccount, Depends(require_token)]):
+    profile: Profile = local_get_profile(profile_id, user)
+    watchhistory: Watchhistory = Watchhistory.get(Watchhistory.profile == profile)
+    watchhistory.remove(tmdb_id)
+    return {"data": watchhistory.__data__.get("watchhistory")}
+
+
+@watchhistory_router.put("/clear")
+async def clear_watchhistory(profile_id: int, user: Annotated[UserAccount, Depends(require_token)]):
+    profile: Profile = local_get_profile(profile_id, user)
+    watchhistory: Watchhistory = Watchhistory.get(Watchhistory.profile == profile)
+    watchhistory.clear()
+    return {"data": watchhistory.__data__.get("watchhistory")}
