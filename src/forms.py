@@ -15,3 +15,7 @@ class UpdateProfileForm(BaseModel):
     id: int
     name: Optional[str] = ""
     avatar_url: Optional[str] = ""
+
+
+class UpdateWatchlistForm(BaseModel):
+    tmdb_id: int

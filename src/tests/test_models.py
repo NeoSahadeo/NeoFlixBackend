@@ -50,6 +50,40 @@ def test_profiles(db):
     profile.update_profile("Test2", "")
     assert Profile.get(Profile.name == "Test2")
 
-    profile.delete_instance()
+    profile.delete_instance(recursive=True)
     with pytest.raises(DoesNotExist):
         Profile.get(Profile.name == "Test2")
+
+
+def test_watchlist(db):
+    user: UserAccount = UserAccount.get(UserAccount.username == "Dummy1")
+    Profile.create(parent=user, name="Test1")
+    assert Profile.get(Profile.name == "Test1")
+
+    profile: Profile = Profile.get(Profile.parent == user, Profile.name == "Test1")
+    watchlist: Watchlist = Watchlist.create(profile=profile)
+
+    watchlist.add(2134)
+    watchlist.add(9999)
+    watchlist.add(0000)
+    assert watchlist.watchlist.get("watchlist")[0] == 2134
+
+    watchlist.remove(2134)
+    assert len(watchlist.watchlist.get("watchlist")) == 2
+
+
+def test_watchhistory(db):
+    user: UserAccount = UserAccount.get(UserAccount.username == "Dummy1")
+    Profile.create(parent=user, name="Test1")
+    assert Profile.get(Profile.name == "Test1")
+
+    profile: Profile = Profile.get(Profile.parent == user, Profile.name == "Test1")
+    watchhistory: Watchhistory = Watchhistory.create(profile=profile)
+
+    watchhistory.add(2134, 30)
+    watchhistory.add(9999, 0)
+    watchhistory.add(0000, 0)
+    assert watchhistory.watchhistory.get("watchhistory")[0]["id"] == 2134
+
+    watchhistory.remove(2134)
+    assert len(watchhistory.watchhistory.get("watchhistory")) == 2

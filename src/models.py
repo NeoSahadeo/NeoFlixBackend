@@ -1,4 +1,7 @@
 import datetime
+
+import pydantic
+
 from peewee import CharField, BooleanField, ForeignKeyField, Model
 from playhouse.sqlite_ext import JSONField
 
@@ -108,17 +111,64 @@ class Preferences(BaseModel):
 
 class Watchlist(BaseModel):
     profile = ForeignKeyField(Profile, backref='watchlists')
-    watchlist = JSONField()
+    watchlist = JSONField(default={"watchlist": []}, null=False)
+
+    def add(self, tmdb_id):
+        if self.watchlist.get("watchlist"):
+            self.watchlist.get("watchlist").append(tmdb_id)
+        else:
+            self.watchlist = {"watchlist": [tmdb_id]}
+        self.save()
+
+    def remove(self, tmdb_id):
+        watchlist = self.watchlist.get("watchlist")
+        if watchlist:
+            filtered_watchlist = [id for id in watchlist if id != tmdb_id]
+            self.watchlist = {"watchlist": filtered_watchlist}
+            self.save()
+
+    def clear(self):
+        self.watchlist = {"watchlist": []}
+        self.save()
 
 
 class Watchhistory(BaseModel):
     profile = ForeignKeyField(Profile, backref='watchhistories')
-    watchhistory = JSONField()
+    watchhistory = JSONField(default={"watchhistory": []}, null=False)
+
+    def add(self, tmdb_id, current_time):
+        if self.watchhistory.get("watchhistory"):
+            self.watchhistory.get("watchhistory").append({
+                "id": tmdb_id,
+                "current_time": current_time
+            })
+        else:
+            self.watchhistory = {"watchhistory": [{
+                "id": tmdb_id,
+                "current_time": current_time
+            }]}
+        self.save()
+
+    def remove(self, tmdb_id):
+        watchhistory = self.watchhistory.get("watchhistory")
+        if watchhistory:
+            filtered_watchhistory = [entry for entry in watchhistory if entry["id"] != tmdb_id]
+            self.watchhistory = {"watchhistory": filtered_watchhistory}
+            self.save()
 
 
 class Notification(BaseModel):
     profile = ForeignKeyField(Profile, backref='notifications')
     notifications = JSONField()
+
+
+class Token(pydantic.BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(UserAccount):
+    username: str | None = None
 
 
 def create_tables():

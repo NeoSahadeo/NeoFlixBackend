@@ -5,6 +5,10 @@ and `NeoFlixMobile`
 
 # Getting Started
 
+### Get TMDB Api Key
+
+---
+
 __Start Backend__
 
 ```bash
@@ -27,6 +31,7 @@ openssl rand -hex 32
 - [x] Setup authentication
 - [ ] <strike>Setup 2fa and secure endpoints</strike>
 - [ ] Setup tmdb access grants
+- [ ] Setup Logs
 
 # Possible Changes
 
