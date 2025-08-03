@@ -87,3 +87,30 @@ def test_watchhistory(db):
 
     watchhistory.remove(2134)
     assert len(watchhistory.watchhistory.get("watchhistory")) == 2
+
+
+def test_preferences(db):
+    user: UserAccount = UserAccount.get(UserAccount.username == "Dummy1")
+    Profile.create(parent=user, name="Test1")
+    assert Profile.get(Profile.name == "Test1")
+
+    profile: Profile = Profile.get(Profile.parent == user, Profile.name == "Test1")
+    preferences: Preferences = Preferences.create(profile=profile)
+    preferences.update_prefs({"color": "green"})
+
+    assert preferences.preferences.get("color") == "green"
+
+    preferences.clear()
+    assert not preferences.preferences.get("color")
+
+
+def test_notification(db):
+    user: UserAccount = UserAccount.get(UserAccount.username == "Dummy1")
+    Profile.create(parent=user, name="Test1")
+    assert Profile.get(Profile.name == "Test1")
+
+    profile: Profile = Profile.get(Profile.parent == user, Profile.name == "Test1")
+    notification: Notification = Notification.create(profile=profile)
+
+    # notification.add
+    ...

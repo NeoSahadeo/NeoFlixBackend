@@ -33,6 +33,8 @@ access_router = APIRouter(tags=["Access"])
 manageprofiles_router = APIRouter(prefix="/manageprofiles", tags=["Manage Profile"])
 watchlist_router = APIRouter(prefix="/watchlist", tags=["Watchlist"])
 watchhistory_router = APIRouter(prefix="/watchhistory", tags=["Watch History"])
+notification_router = APIRouter(prefix="/notification", tags=["Notification"])
+preferences_router = APIRouter(prefix="/preferences", tags=["Preferences"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -251,3 +253,11 @@ async def clear_watchhistory(profile_id: int, user: Annotated[UserAccount, Depen
     watchhistory: Watchhistory = Watchhistory.get(Watchhistory.profile == profile)
     watchhistory.clear()
     return {"data": watchhistory.__data__.get("watchhistory")}
+
+
+# @notification_router.get("/{profile_id}")
+# async def get_notification(profile_id: int,
+#                            user: Annotated[UserAccount, Depends(require_token)]):
+#     profile: Profile = local_get_profile(profile_id, user)
+#     watchhistory: Watchhistory = Watchhistory.get(Watchhistory.profile == profile)
+#     return {"data": watchhistory.__data__.get("watchhistory")}

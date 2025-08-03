@@ -106,7 +106,15 @@ class Profile(BaseModel):
 
 class Preferences(BaseModel):
     profile = ForeignKeyField(Profile, backref='preferences')
-    preferences = JSONField()
+    preferences = JSONField(default={}, null=False)
+
+    def update_prefs(self, data):
+        self.preferences = data
+        self.save()
+
+    def clear(self):
+        self.preferences = {}
+        self.save()
 
 
 class Watchlist(BaseModel):
@@ -163,7 +171,18 @@ class Watchhistory(BaseModel):
 
 class Notification(BaseModel):
     profile = ForeignKeyField(Profile, backref='notifications')
-    notifications = JSONField()
+    notification = JSONField(default={"noticiation": []}, null=False)
+
+    def add(self, data):
+        if self.notifications.get("notifications"):
+            self.notifications.get("notifications").append(data)
+        else:
+            self.notifications = {"notifications": [data]}
+        self.save()
+
+    def clear(self):
+        self.notifications = {"notifications": []}
+        self.save()
 
 
 class Token(pydantic.BaseModel):
