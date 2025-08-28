@@ -14,3 +14,7 @@ create_tables()
 # if not config:
 #     return
 # file_path = Path(config.get("database_location"))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,5 +1,10 @@
+import os
 import threading
 from playhouse.sqlite_ext import SqliteExtDatabase
+
+# base_dir = os.path.dirname(os.path.abspath(__file__))
+# db_name = os.path.join(base_dir, 'database.db')
+# os.makedirs(os.path.dirname(db_name), exist_ok=True)
 
 
 class DatabaseSingleton:

@@ -29,7 +29,7 @@ def read_config() -> dict | None:
 
 def create_user():
     create_tables()
-    UserAccount().create_user("admin", "admin@gmail.com", hash_password("Password1234"))
+    UserAccount().create_user("admin", "admin@bromail.com", hash_password("Password1234"))
 
 
 def migrate():
